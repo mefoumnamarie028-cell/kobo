@@ -32,7 +32,7 @@ export default function ChatThreadPage() {
     if (!message.trim()) return;
 
     const newMessage = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       chatId,
       senderId: currentUser.id,
       text: message,
