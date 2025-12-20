@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,6 +20,15 @@ export default function StoryViewer() {
   const currentStoryIndex = storyIndex >= 0 ? storyIndex : 0;
   const story = stories[currentStoryIndex + currentIndex] || stories[0];
 
+  const handleNext = useCallback(() => {
+    if (currentStoryIndex + currentIndex < stories.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setProgress(0);
+    } else {
+      navigate(-1);
+    }
+  }, [currentStoryIndex, currentIndex, navigate]);
+
   useEffect(() => {
     if (isPaused) return;
 
@@ -38,16 +47,7 @@ export default function StoryViewer() {
     }, interval);
 
     return () => clearInterval(timer);
-  }, [currentIndex, isPaused, story]);
-
-  const handleNext = () => {
-    if (currentStoryIndex + currentIndex < stories.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      setProgress(0);
-    } else {
-      navigate(-1);
-    }
-  };
+  }, [currentIndex, isPaused, story, handleNext]);
 
   const handlePrev = () => {
     if (currentIndex > 0) {
