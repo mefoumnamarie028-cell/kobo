@@ -171,7 +171,7 @@ export default function ProductDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h2 className="text-lg font-semibold text-foreground mb-3">What's Included</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-3">What&apos;s Included</h2>
           <Card>
             <CardContent className="p-4 space-y-3">
               {['Instant delivery', 'Lifetime access', '24/7 support', 'Free updates'].map((feature, index) => (
