@@ -69,7 +69,7 @@ export default function NotificationsPage() {
               <Bell className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-1">No notifications</h3>
-            <p className="text-sm text-muted-foreground">You're all caught up!</p>
+            <p className="text-sm text-muted-foreground">You&apos;re all caught up!</p>
           </div>
         ) : (
           <Card>
