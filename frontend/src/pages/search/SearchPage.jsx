@@ -121,7 +121,7 @@ export default function SearchPage() {
               {!hasResults ? (
                 <div className="text-center py-12">
                   <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No results found for "{query}"</p>
+                  <p className="text-muted-foreground">No results found for &ldquo;{query}&rdquo;</p>
                 </div>
               ) : (
                 <>
