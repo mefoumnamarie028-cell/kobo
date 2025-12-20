@@ -69,7 +69,8 @@ export default function StoryViewer() {
   };
 
   const formatTime = (date) => {
-    const hours = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60));
+    const now = new Date();
+    const hours = Math.floor((now.getTime() - new Date(date).getTime()) / (1000 * 60 * 60));
     if (hours < 1) return 'Just now';
     if (hours < 24) return `${hours}h ago`;
     return '1d ago';
