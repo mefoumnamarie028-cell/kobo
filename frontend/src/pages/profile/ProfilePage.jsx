@@ -82,7 +82,11 @@ export default function ProfilePage() {
 
               {/* Actions */}
               <div className="flex gap-3 mt-6">
-                <Button variant="secondary" className="flex-1 gap-2">
+                <Button
+                  variant="secondary"
+                  className="flex-1 gap-2"
+                  onClick={() => navigate('/profile/edit')}
+                >
                   <Edit className="h-4 w-4" />
                   Edit Profile
                 </Button>

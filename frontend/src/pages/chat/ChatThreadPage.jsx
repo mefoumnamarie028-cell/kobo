@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Phone, Video, MoreVertical, Send, Paperclip, Image, Smile, Mic, Check, CheckCheck } from 'lucide-react';
-import { chats, messages as allMessages } from '@/data/mockData';
+import { ArrowLeft, Phone, Video, MoreVertical, Send, Paperclip, Image, Smile, Mic, Check, CheckCheck, Play, Square, X } from 'lucide-react';
+import { chats, storeChats, messages as allMessages } from '@/data/mockData';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -15,17 +17,36 @@ export default function ChatThreadPage() {
   const navigate = useNavigate();
   const { currentUser } = useApp();
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState(
-    allMessages.filter(m => m.chatId === chatId)
-  );
+  const [messages, setMessages] = useState(allMessages.filter(m => m.chatId === chatId));
   const [isTyping, setIsTyping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const messagesEndRef = useRef(null);
 
-  const chat = chats.find(c => c.id === chatId);
+  const allChats = [...chats, ...storeChats];
+  const chat = allChats.find(c => c.id === chatId);
+
+  useEffect(() => {
+    setMessages(allMessages.filter(m => m.chatId === chatId));
+  }, [chatId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (!isRecording) return;
+    const timer = setInterval(() => {
+      setRecordingSeconds(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isRecording]);
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleSend = (e) => {
     e.preventDefault();
@@ -35,12 +56,13 @@ export default function ChatThreadPage() {
       id: crypto.randomUUID(),
       chatId,
       senderId: currentUser.id,
+      type: 'text',
       text: message,
       createdAt: new Date(),
       status: 'sent',
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages(prev => [...prev, newMessage]);
     setMessage('');
 
     // Simulate typing indicator and reply
@@ -51,11 +73,40 @@ export default function ChatThreadPage() {
         id: (Date.now() + 1).toString(),
         chatId,
         senderId: chat.participant.id,
+        type: 'text',
         text: 'Thanks for your message! I\'ll get back to you soon.',
         createdAt: new Date(),
         status: 'delivered',
       }]);
     }, 3000);
+  };
+
+  const handleToggleRecording = () => {
+    if (isRecording) {
+      setIsRecording(false);
+      if (recordingSeconds > 0) {
+        const voiceMessage = {
+          id: crypto.randomUUID(),
+          chatId,
+          senderId: currentUser.id,
+          type: 'voice',
+          duration: recordingSeconds,
+          createdAt: new Date(),
+          status: 'sent',
+        };
+        setMessages(prev => [...prev, voiceMessage]);
+      }
+      setRecordingSeconds(0);
+      return;
+    }
+
+    setRecordingSeconds(0);
+    setIsRecording(true);
+  };
+
+  const handleCancelRecording = () => {
+    setIsRecording(false);
+    setRecordingSeconds(0);
   };
 
   if (!chat) {
@@ -89,7 +140,14 @@ export default function ChatThreadPage() {
                 <h1 className="font-semibold text-foreground text-sm">
                   {chat.participant.name}
                 </h1>
-                <p className="text-xs text-success">Online</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-success">Online</p>
+                  {chat.type === 'store' && (
+                    <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
+                      Store
+                    </Badge>
+                  )}
+                </div>
               </div>
             </button>
           </div>
@@ -102,12 +160,31 @@ export default function ChatThreadPage() {
             >
               <Phone className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon-sm" className="text-primary">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="text-primary"
+              onClick={() => navigate(`/call/${chatId}?type=video`)}
+            >
               <Video className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon-sm" className="text-muted-foreground">
-              <MoreVertical className="h-5 w-5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-sm" className="text-muted-foreground">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate(`/profile/${chat.participant.id}`)}>
+                  View profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>Search in chat</DropdownMenuItem>
+                <DropdownMenuItem>Mute notifications</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive">Report</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">Block</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -148,7 +225,41 @@ export default function ChatThreadPage() {
                     : "bg-secondary text-foreground rounded-bl-md"
                 )}
               >
-                <p className="text-sm leading-relaxed">{msg.text}</p>
+                {msg.type === 'voice' ? (
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-9 h-9 rounded-full flex items-center justify-center",
+                      isOwn ? "bg-primary-foreground/20" : "bg-background/80"
+                    )}>
+                      <Play className={cn(
+                        "h-4 w-4",
+                        isOwn ? "text-primary-foreground" : "text-foreground"
+                      )} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1">
+                        {[...Array(8)].map((_, idx) => (
+                          <span
+                            key={idx}
+                            className={cn(
+                              "w-1 rounded-full",
+                              isOwn ? "bg-primary-foreground/70" : "bg-muted-foreground",
+                              idx % 2 === 0 ? "h-4" : "h-2"
+                            )}
+                          />
+                        ))}
+                      </div>
+                      <p className={cn(
+                        "text-[10px] mt-1",
+                        isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
+                      )}>
+                        Voice message · {formatDuration(msg.duration || 0)}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm leading-relaxed">{msg.text}</p>
+                )}
                 <div className={cn(
                   "flex items-center gap-1 mt-1",
                   isOwn ? "justify-end" : "justify-start"
@@ -209,29 +320,53 @@ export default function ChatThreadPage() {
               <Image className="h-5 w-5" />
             </Button>
           </div>
-          <div className="flex-1 relative">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="h-11 pr-12 bg-secondary border-0"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
-            >
-              <Smile className="h-5 w-5" />
-            </Button>
-          </div>
+          {isRecording ? (
+            <div className="flex-1 flex items-center gap-3 bg-secondary rounded-full px-4 h-11">
+              <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+              <span className="text-sm text-foreground">
+                Recording {formatDuration(recordingSeconds)}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="ml-auto text-muted-foreground"
+                onClick={handleCancelRecording}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex-1 relative">
+              <Input
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type a message..."
+                className="h-11 pr-12 bg-secondary border-0"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                <Smile className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
           {message.trim() ? (
             <Button type="submit" size="icon" className="rounded-full">
               <Send className="h-5 w-5" />
             </Button>
           ) : (
-            <Button type="button" variant="secondary" size="icon" className="rounded-full">
-              <Mic className="h-5 w-5" />
+            <Button
+              type="button"
+              variant={isRecording ? 'destructive' : 'secondary'}
+              size="icon"
+              className="rounded-full"
+              onClick={handleToggleRecording}
+            >
+              {isRecording ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </Button>
           )}
         </form>

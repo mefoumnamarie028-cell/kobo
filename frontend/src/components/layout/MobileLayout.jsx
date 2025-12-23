@@ -1,12 +1,11 @@
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Home, MessageCircle, Wallet, Store, User } from 'lucide-react';
+import { MessageCircle, Wallet, Store, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
 const navItems = [
-  { path: '/home', icon: Home, label: 'Home' },
-  { path: '/chat', icon: MessageCircle, label: 'Chat' },
+  { path: '/chat', icon: MessageCircle, label: 'Messages' },
   { path: '/wallet', icon: Wallet, label: 'Wallet' },
   { path: '/store', icon: Store, label: 'Store' },
   { path: '/profile', icon: User, label: 'Profile' },
@@ -42,8 +41,8 @@ export function MobileLayout() {
           <div className="max-w-lg mx-auto px-4 pb-safe">
             <div className="flex items-center justify-around h-16">
               {navItems.map((item) => {
-                const isActive = location.pathname === item.path || 
-                  (item.path !== '/home' && location.pathname.startsWith(item.path));
+                const isActive = location.pathname === item.path ||
+                  location.pathname.startsWith(`${item.path}/`);
                 const Icon = item.icon;
 
                 return (

@@ -66,7 +66,7 @@ export default function OTPPage() {
     setTimeout(() => {
       setIsLoading(false);
       login();
-      navigate('/home');
+      navigate('/chat');
     }, 1000);
   };
 

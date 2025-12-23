@@ -9,11 +9,11 @@ import OnboardingPage from './pages/OnboardingPage';
 import SignupPage from './pages/auth/SignupPage';
 import LoginPage from './pages/auth/LoginPage';
 import OTPPage from './pages/auth/OTPPage';
-import HomePage from './pages/HomePage';
 import StoryViewer from './pages/story/StoryViewer';
 import ChatListPage from './pages/chat/ChatListPage';
 import ChatThreadPage from './pages/chat/ChatThreadPage';
 import CallPage from './pages/chat/CallPage';
+import ChannelPage from './pages/chat/ChannelPage';
 import WalletPage from './pages/wallet/WalletPage';
 import DepositPage from './pages/wallet/DepositPage';
 import WithdrawPage from './pages/wallet/WithdrawPage';
@@ -22,6 +22,7 @@ import StorePage from './pages/store/StorePage';
 import ProductDetailPage from './pages/store/ProductDetailPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import SettingsPage from './pages/profile/SettingsPage';
+import EditProfilePage from './pages/profile/EditProfilePage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import SearchPage from './pages/search/SearchPage';
 
@@ -38,7 +39,7 @@ function AppRoutes() {
 
       {/* Main App Routes with Bottom Navigation */}
       <Route element={<MobileLayout />}>
-        <Route path="/home" element={<HomePage />} />
+        <Route path="/home" element={<Navigate to="/chat" replace />} />
         <Route path="/chat" element={<ChatListPage />} />
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/store" element={<StorePage />} />
@@ -53,6 +54,7 @@ function AppRoutes() {
       {/* Chat Routes */}
       <Route path="/chat/:chatId" element={<ChatThreadPage />} />
       <Route path="/call/:chatId" element={<CallPage />} />
+      <Route path="/channels/:channelId" element={<ChannelPage />} />
 
       {/* Wallet Routes */}
       <Route path="/wallet/deposit" element={<DepositPage />} />
@@ -64,6 +66,7 @@ function AppRoutes() {
 
       {/* Profile Routes */}
       <Route path="/profile/settings" element={<SettingsPage />} />
+      <Route path="/profile/edit" element={<EditProfilePage />} />
 
       {/* Default redirect */}
       <Route path="/" element={<Navigate to="/onboarding" replace />} />

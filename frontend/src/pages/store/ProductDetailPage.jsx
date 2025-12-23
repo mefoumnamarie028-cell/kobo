@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Star, ShoppingCart, CheckCircle } from 'lucide-react';
-import { products } from '@/data/mockData';
+import { ArrowLeft, Star, ShoppingCart, CheckCircle, Heart, MessageCircle } from 'lucide-react';
+import { products, shops, storeChats } from '@/data/mockData';
 import { useApp } from '@/context/AppContext';
 
 export default function ProductDetailPage() {
@@ -16,6 +16,8 @@ export default function ProductDetailPage() {
   const [isPurchased, setIsPurchased] = useState(false);
 
   const product = products.find(p => p.id === productId);
+  const shop = shops.find(s => s.id === product?.shopId);
+  const storeChat = storeChats.find(chat => chat.store?.id === product?.shopId);
 
   if (!product) {
     navigate('/store');
@@ -150,11 +152,23 @@ export default function ProductDetailPage() {
                     <Star
                       key={star}
                       className={`h-4 w-4 ${
-                        star <= 4 ? 'fill-warning text-warning' : 'text-muted-foreground'
+                        star <= Math.round(product.rating) ? 'fill-warning text-warning' : 'text-muted-foreground'
                       }`}
                     />
                   ))}
-                  <span className="text-sm text-muted-foreground ml-1">4.8 (256)</span>
+                  <span className="text-sm text-muted-foreground ml-1">
+                    {product.rating} ({product.reviews})
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Heart className="h-4 w-4" />
+                    {product.likes}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MessageCircle className="h-4 w-4" />
+                    {product.comments}
+                  </span>
                 </div>
               </div>
 
@@ -164,6 +178,38 @@ export default function ProductDetailPage() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {shop && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <h2 className="text-lg font-semibold text-foreground mb-3">Shop</h2>
+            <Card>
+              <CardContent className="p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={shop.avatar}
+                    alt={shop.name}
+                    className="w-12 h-12 rounded-xl object-cover"
+                  />
+                  <div>
+                    <h3 className="font-semibold text-foreground">{shop.name}</h3>
+                    <p className="text-xs text-muted-foreground">{shop.category}</p>
+                  </div>
+                </div>
+                {storeChat ? (
+                  <Button variant="secondary" onClick={() => navigate(`/chat/${storeChat.id}`)}>
+                    Message
+                  </Button>
+                ) : (
+                  <Button variant="secondary">Visit</Button>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Features */}
         <motion.div

@@ -77,7 +77,7 @@ export default function StoryViewer() {
   };
 
   if (!story) {
-    navigate('/home');
+    navigate('/chat');
     return null;
   }
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { currentUser as initialUser, transactions as initialTransactions, notifications as initialNotifications } from '../data/mockData';
 
 const AppContext = createContext(null);
@@ -9,6 +9,10 @@ export function AppProvider({ children }) {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === 'undefined') return 'light';
+    return localStorage.getItem('theme') || 'light';
+  });
 
   const login = useCallback(() => {
     setIsAuthenticated(true);
@@ -44,7 +48,17 @@ export function AppProvider({ children }) {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   }, []);
 
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  }, []);
+
   const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   return (
     <AppContext.Provider
@@ -63,6 +77,9 @@ export function AppProvider({ children }) {
         hasCompletedOnboarding,
         completeOnboarding,
         updateBalance,
+        theme,
+        setTheme,
+        toggleTheme,
       }}
     >
       {children}

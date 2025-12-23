@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, ChevronRight, Moon, Sun, Globe, Lock, Bell, HelpCircle, FileText, Trash2 } from 'lucide-react';
+import { useApp } from '@/context/AppContext';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = React.useState(false);
+  const { theme, toggleTheme } = useApp();
+  const isDarkMode = theme === 'dark';
   const [notifications, setNotifications] = React.useState(true);
 
   const settingsSections = [
@@ -16,11 +18,11 @@ export default function SettingsPage() {
       title: 'Preferences',
       items: [
         {
-          icon: darkMode ? Moon : Sun,
+          icon: isDarkMode ? Moon : Sun,
           label: 'Dark Mode',
           type: 'toggle',
-          value: darkMode,
-          onChange: setDarkMode,
+          value: isDarkMode,
+          onChange: toggleTheme,
         },
         {
           icon: Bell,

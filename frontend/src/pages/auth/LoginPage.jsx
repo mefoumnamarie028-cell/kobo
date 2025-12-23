@@ -21,11 +21,11 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      login();
-      navigate('/home');
-    }, 1000);
+      setTimeout(() => {
+        setIsLoading(false);
+        login();
+        navigate('/chat');
+      }, 1000);
   };
 
   return (
