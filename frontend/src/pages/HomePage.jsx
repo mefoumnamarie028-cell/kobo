@@ -19,7 +19,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopBar title="Social Wallet" />
+      <TopBar title="Kobo" />
 
       {/* Stories */}
       <section className="border-b border-border/50">

@@ -40,7 +40,7 @@ export default function LoginPage() {
           <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-lg">
             <Wallet className="h-6 w-6 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-foreground">Social Wallet</span>
+          <span className="text-xl font-bold text-foreground">Kobo</span>
         </motion.div>
       </div>
 

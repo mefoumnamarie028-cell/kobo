@@ -168,7 +168,7 @@ export default function SettingsPage() {
         ))}
 
         <p className="text-center text-xs text-muted-foreground">
-          Social Wallet v1.0.0
+          Kobo v1.0.0
         </p>
       </div>
     </div>

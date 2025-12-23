@@ -8,7 +8,7 @@ import { Wallet, Users, Gift, ChevronRight } from 'lucide-react';
 const slides = [
   {
     icon: Wallet,
-    title: 'Your Social Wallet',
+    title: 'Your Kobo',
     description: 'Send, receive, and manage your money seamlessly with friends and creators.',
     gradient: 'from-primary to-primary-light',
   },
