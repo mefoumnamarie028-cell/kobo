@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kobo-frontend
+spec:
+  rules:
+    - host: app.kobo.your-domain.tld
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kobo-frontend
+                port:
+                  number: 80
+

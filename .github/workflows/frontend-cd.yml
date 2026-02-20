@@ -1,0 +1,171 @@
+name: frontend-cd
+
+on:
+  push:
+    branches:
+      - main
+      - module/store
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "Environment to deploy (dev|prod)"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      image_repo: ${{ steps.meta.outputs.image_repo }}
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      image_ref: ${{ steps.meta.outputs.image_ref }}
+      target_env: ${{ steps.meta.outputs.target_env }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve deployment metadata
+        id: meta
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            TARGET_ENV="${{ inputs.target_env }}"
+          elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            TARGET_ENV="prod"
+          else
+            TARGET_ENV="dev"
+          fi
+          IMAGE_REPO="ghcr.io/${GITHUB_REPOSITORY_OWNER}/kobo-frontend"
+          IMAGE_TAG="${GITHUB_SHA::7}"
+          echo "target_env=${TARGET_ENV}" >> "$GITHUB_OUTPUT"
+          echo "image_repo=${IMAGE_REPO}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "image_ref=${IMAGE_REPO}:${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image_ref }}
+            ${{ steps.meta.outputs.image_repo }}:${{ steps.meta.outputs.target_env }}-latest
+
+  deploy-dev:
+    if: ${{ needs.build-and-push.outputs.target_env == 'dev' }}
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check deployment preconditions
+        id: preflight
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          if [[ -z "${KUBE_CONFIG}" ]]; then
+            echo "KUBE_CONFIG secret is missing, skipping deploy."
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up kubectl
+        if: steps.preflight.outputs.should_deploy == 'true'
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+
+      - name: Configure kubeconfig
+        if: steps.preflight.outputs.should_deploy == 'true'
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p "$HOME/.kube"
+          if echo "$KUBE_CONFIG" | grep -q "apiVersion:"; then
+            printf "%s" "$KUBE_CONFIG" > "$HOME/.kube/config"
+          else
+            printf "%s" "$KUBE_CONFIG" | base64 -d > "$HOME/.kube/config"
+          fi
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Apply manifests and update image
+        if: steps.preflight.outputs.should_deploy == 'true'
+        run: |
+          kubectl create namespace kobo-dev --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -k infra/k8s/frontend/overlays/dev
+          kubectl -n kobo-dev set image deployment/kobo-frontend \
+            kobo-frontend=${{ needs.build-and-push.outputs.image_ref }}
+          kubectl -n kobo-dev rollout status deployment/kobo-frontend --timeout=180s
+
+  deploy-prod:
+    if: ${{ needs.build-and-push.outputs.target_env == 'prod' }}
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check deployment preconditions
+        id: preflight
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          if [[ -z "${KUBE_CONFIG}" ]]; then
+            echo "KUBE_CONFIG secret is missing, skipping deploy."
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up kubectl
+        if: steps.preflight.outputs.should_deploy == 'true'
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+
+      - name: Configure kubeconfig
+        if: steps.preflight.outputs.should_deploy == 'true'
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p "$HOME/.kube"
+          if echo "$KUBE_CONFIG" | grep -q "apiVersion:"; then
+            printf "%s" "$KUBE_CONFIG" > "$HOME/.kube/config"
+          else
+            printf "%s" "$KUBE_CONFIG" | base64 -d > "$HOME/.kube/config"
+          fi
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Apply manifests and update image
+        if: steps.preflight.outputs.should_deploy == 'true'
+        run: |
+          kubectl create namespace kobo-prod --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -k infra/k8s/frontend/overlays/prod
+          kubectl -n kobo-prod set image deployment/kobo-frontend \
+            kobo-frontend=${{ needs.build-and-push.outputs.image_ref }}
+          kubectl -n kobo-prod rollout status deployment/kobo-frontend --timeout=180s
