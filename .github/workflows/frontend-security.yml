@@ -1,0 +1,55 @@
+name: frontend-security
+
+on:
+  push:
+    branches:
+      - module/store
+      - main
+  pull_request:
+    branches:
+      - module/store
+      - main
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+
+  codeql:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
