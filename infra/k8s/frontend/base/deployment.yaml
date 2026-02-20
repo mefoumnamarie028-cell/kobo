@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kobo-frontend
+  labels:
+    app.kubernetes.io/name: kobo-frontend
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kobo-frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kobo-frontend
+    spec:
+      containers:
+        - name: kobo-frontend
+          image: ghcr.io/mefoumnamarie028-cell/kobo-frontend:dev-latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kobo-frontend
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+        - name: kobo-frontend
+          image: ghcr.io/mefoumnamarie028-cell/kobo-frontend:prod-latest
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
