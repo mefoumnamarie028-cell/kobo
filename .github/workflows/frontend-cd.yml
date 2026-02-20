@@ -80,12 +80,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check deployment preconditions
+        id: preflight
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          if [[ -z "${KUBE_CONFIG}" ]]; then
+            echo "KUBE_CONFIG secret is missing, skipping deploy."
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up kubectl
+        if: steps.preflight.outputs.should_deploy == 'true'
         uses: azure/setup-kubectl@v4
         with:
           version: v1.30.0
 
       - name: Configure kubeconfig
+        if: steps.preflight.outputs.should_deploy == 'true'
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
@@ -98,6 +112,7 @@ jobs:
           chmod 600 "$HOME/.kube/config"
 
       - name: Apply manifests and update image
+        if: steps.preflight.outputs.should_deploy == 'true'
         run: |
           kubectl create namespace kobo-dev --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply -k infra/k8s/frontend/overlays/dev
@@ -115,12 +130,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check deployment preconditions
+        id: preflight
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          if [[ -z "${KUBE_CONFIG}" ]]; then
+            echo "KUBE_CONFIG secret is missing, skipping deploy."
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up kubectl
+        if: steps.preflight.outputs.should_deploy == 'true'
         uses: azure/setup-kubectl@v4
         with:
           version: v1.30.0
 
       - name: Configure kubeconfig
+        if: steps.preflight.outputs.should_deploy == 'true'
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
@@ -133,10 +162,10 @@ jobs:
           chmod 600 "$HOME/.kube/config"
 
       - name: Apply manifests and update image
+        if: steps.preflight.outputs.should_deploy == 'true'
         run: |
           kubectl create namespace kobo-prod --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply -k infra/k8s/frontend/overlays/prod
           kubectl -n kobo-prod set image deployment/kobo-frontend \
             kobo-frontend=${{ needs.build-and-push.outputs.image_ref }}
           kubectl -n kobo-prod rollout status deployment/kobo-frontend --timeout=180s
-
