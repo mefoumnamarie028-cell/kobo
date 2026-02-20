@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
         - name: kobo-frontend
-          image: ghcr.io/mefoumnamarie028-cell/kobo-frontend:prod-latest
+          image: ghcr.io/eliote-geeks/kobo-frontend:prod-latest
           resources:
             requests:
               cpu: 200m
@@ -16,4 +16,3 @@ spec:
             limits:
               cpu: "1"
               memory: 1Gi
-

@@ -43,7 +43,7 @@ jobs:
           else
             TARGET_ENV="dev"
           fi
-          IMAGE_REPO="ghcr.io/${GITHUB_REPOSITORY_OWNER}/kobo-frontend"
+          IMAGE_REPO="ghcr.io/eliote-geeks/kobo-frontend"
           IMAGE_TAG="${GITHUB_SHA::7}"
           echo "target_env=${TARGET_ENV}" >> "$GITHUB_OUTPUT"
           echo "image_repo=${IMAGE_REPO}" >> "$GITHUB_OUTPUT"

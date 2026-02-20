@@ -26,7 +26,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: kobo-frontend
-          image: ghcr.io/mefoumnamarie028-cell/kobo-frontend:dev-latest
+          image: ghcr.io/eliote-geeks/kobo-frontend:dev-latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
