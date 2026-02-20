@@ -15,12 +15,21 @@ spec:
       labels:
         app.kubernetes.io/name: kobo-frontend
     spec:
+      serviceAccountName: kobo-frontend
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: kobo-frontend
           image: ghcr.io/mefoumnamarie028-cell/kobo-frontend:dev-latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               name: http
           livenessProbe:
             httpGet:
@@ -41,4 +50,9 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
