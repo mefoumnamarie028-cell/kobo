@@ -2,9 +2,16 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: kobo-frontend
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
 spec:
+  tls:
+    - hosts:
+        - app-dev.kobo.79.137.32.27.nip.io
+      secretName: app-dev-kobo-tls
   rules:
-    - host: app-dev.kobo.your-domain.tld
+    - host: app-dev.kobo.79.137.32.27.nip.io
       http:
         paths:
           - path: /
@@ -14,4 +21,3 @@ spec:
                 name: kobo-frontend
                 port:
                   number: 80
-
